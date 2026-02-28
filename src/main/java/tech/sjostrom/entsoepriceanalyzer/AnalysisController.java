@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/analysis")
@@ -34,5 +35,14 @@ public class AnalysisController {
     public DailySummary getSummaryForDate(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return service.getDailySummary(date);
+    }
+
+    @GetMapping("/exchange-rate")
+    public Map<String, Object> getExchangeRate() {
+        return Map.of(
+                "from", "EUR",
+                "to", "SEK",
+                "rate", service.getCurrentExchangeRate()
+        );
     }
 }

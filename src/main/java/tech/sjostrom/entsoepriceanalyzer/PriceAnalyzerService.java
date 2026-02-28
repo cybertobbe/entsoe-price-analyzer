@@ -1,7 +1,6 @@
 package tech.sjostrom.entsoepriceanalyzer;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -18,8 +17,8 @@ public class PriceAnalyzerService {
     @Autowired
     private SpotPriceRepository repository;
 
-    @Value("${exchange.rate.eur.sek}")
-    private BigDecimal exchangeRate;
+    @Autowired
+    private ExchangeRateService exchangeRateService;
 
     private static final BigDecimal MWH_TO_KWH = new BigDecimal("1000");
     private static final BigDecimal VAT = new BigDecimal("1.25");
@@ -46,7 +45,6 @@ public class PriceAnalyzerService {
         DailySummary summary = new DailySummary();
         summary.setDate(date);
 
-        // Beräkna snitt
         BigDecimal avg = prices.stream()
                 .map(PriceAnalysis::getPriceSekKwh)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
@@ -55,7 +53,6 @@ public class PriceAnalyzerService {
         summary.setAverageSekKwh(avg);
         summary.setAverageSekKwhInclVat(avg.multiply(VAT).setScale(4, RoundingMode.HALF_UP));
 
-        // Min/Max
         summary.setMinSekKwh(prices.stream()
                 .map(PriceAnalysis::getPriceSekKwh)
                 .min(Comparator.naturalOrder())
@@ -66,19 +63,21 @@ public class PriceAnalyzerService {
                 .max(Comparator.naturalOrder())
                 .orElse(BigDecimal.ZERO));
 
-        // Billigaste 3 timmarna
         summary.setCheapestHours(prices.stream()
                 .sorted(Comparator.comparing(PriceAnalysis::getPriceSekKwh))
                 .limit(3)
                 .collect(Collectors.toList()));
 
-        // Dyraste 3 timmarna
         summary.setExpensiveHours(prices.stream()
                 .sorted(Comparator.comparing(PriceAnalysis::getPriceSekKwh).reversed())
                 .limit(3)
                 .collect(Collectors.toList()));
 
         return summary;
+    }
+
+    public BigDecimal getCurrentExchangeRate() {
+        return exchangeRateService.getEurToSek();
     }
 
     private List<PriceAnalysis> convertPrices(List<SpotPrice> spotPrices) {
@@ -88,7 +87,8 @@ public class PriceAnalyzerService {
     }
 
     private PriceAnalysis convertPrice(SpotPrice spot) {
-        // EUR/MWh -> SEK/kWh
+        BigDecimal exchangeRate = exchangeRateService.getEurToSek();
+
         BigDecimal sekKwh = spot.getPrice()
                 .multiply(exchangeRate)
                 .divide(MWH_TO_KWH, 4, RoundingMode.HALF_UP);
