@@ -24,14 +24,15 @@ public class PriceAnalyzerService {
     private static final BigDecimal VAT = new BigDecimal("1.25");
 
     public List<PriceAnalysis> getTodayPrices() {
-        LocalDateTime start = LocalDate.now().atStartOfDay();
-        LocalDateTime end = start.plusDays(1);
+        LocalDate today = LocalDate.now();
+        LocalDateTime start = today.atStartOfDay();
+        LocalDateTime end = today.atTime(23, 59, 59);
         return convertPrices(repository.findByTimestampBetweenOrderByTimestamp(start, end));
     }
 
     public List<PriceAnalysis> getPricesForDate(LocalDate date) {
         LocalDateTime start = date.atStartOfDay();
-        LocalDateTime end = start.plusDays(1);
+        LocalDateTime end = date.atTime(23, 59, 59);
         return convertPrices(repository.findByTimestampBetweenOrderByTimestamp(start, end));
     }
 
