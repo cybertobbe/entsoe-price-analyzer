@@ -1,0 +1,26 @@
+site_name: ENTSOE Price Analyzer
+site_description: Dokumentation för elprisanalys-tjänsten
+site_author: Tobias Sjöström
+
+theme:
+  name: material
+  language: sv
+  palette:
+    primary: indigo
+    accent: amber
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+
+nav:
+  - Hem: index.md
+  - API: api.md
+  - Arkitektur: architecture.md
+  - Deployment: deployment.md
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
